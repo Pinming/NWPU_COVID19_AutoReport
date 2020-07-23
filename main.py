@@ -9,8 +9,8 @@ import time
 
 # 登录信息
 # --------------------------
-username = '201930xxxx' # 学号
-password = 'abcdefg12345' # 翱翔门户密码
+username = '2019******' # 学号
+password = 'abcd123456' # 翱翔门户密码
 
 # Email 设置
 # 如果邮箱用户名密码有误会导致发不出邮件但仍然提示发送成功！【已知 Bug，后续将修正】
@@ -23,21 +23,21 @@ mail_host = "smtp.163.com"
 # SMTP 端口号，一般为 465；其他邮箱请参见说明
 mail_SMTPPort = 465  
 # 用户名，格式为「 *****@**.com」
-mail_user = "xxxxxxxx@163.com"
+mail_user = "******@163.com"
 # 一般此处填登录密码；QQ 邮箱等特殊邮箱应填写「授权码」而非密码
-mail_pass = "xxxxxxxxxx" 
+mail_pass = "abcd12345" 
 # 发件人邮箱，填在单引号内
-sender = 'xxxxxxxx@163.com'
+sender = '******@163.com'
 # 收件人邮箱，填在单引号内；不要删去两侧中括号（使用 list 形式填入）
 # -- 单个接收邮箱：['*******@***.com']
 # -- 多个接收邮箱：['******1@***.com', '******2@***.com', ...]
-receivers = ['xxxxxxxx@163.com']
+receivers = ['******@163.com']
 
 ####### 这一部分一般不需要修改，除非你需要自己定制 ####### 
 # 邮件标题
 title = '【' + time.strftime("%Y/%m/%d", time.localtime()) + '】' + '今日健康状况已成功申报！'
 # 邮件内容
-content = '今日健康状况已成功申报！申报时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n' + '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：【链接预留】'
+content = '今日健康状况已成功申报！申报时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n' + '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport'
 ####### 这一部分一般不需要修改，除非你需要自己定制 ####### 
 
 
@@ -141,7 +141,7 @@ def login(username=username,password=password):
     if loc_code_str == '':
         print('获取上一次填报的信息时出现错误！' + '\n' + '请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！')
         exit()
-login()
+
 
     
 def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
@@ -200,4 +200,8 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     else:
         print('申报失败，请重试！')
 
-submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber)
+def execute(username, password):
+    login(username, password)
+    submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber)
+
+execute(username, password)
