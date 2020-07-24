@@ -5,12 +5,13 @@ import location
 import smtplib
 from email.header import Header
 from email.mime.text import MIMEText
-import time
+import datetime
+import pytz
 
 # 登录信息
 # --------------------------
 username = '2019******' # 学号
-password = 'abcd123456' # 翱翔门户密码
+password = '********'  # 翱翔门户密码
 
 # Email 设置
 # 如果邮箱用户名密码有误会导致发不出邮件但仍然提示发送成功！【已知 Bug，后续将修正】
@@ -22,22 +23,23 @@ email_switcher = 1
 mail_host = "smtp.163.com"  
 # SMTP 端口号，一般为 465；其他邮箱请参见说明
 mail_SMTPPort = 465  
-# 用户名，格式为「 *****@**.com」
-mail_user = "******@163.com"
+# 发件邮箱用户名，格式为「 *****@**.com」
+mail_user = "********@163.com"
 # 一般此处填登录密码；QQ 邮箱等特殊邮箱应填写「授权码」而非密码
-mail_pass = "abcd12345" 
-# 发件人邮箱，填在单引号内
-sender = '******@163.com'
+mail_pass = "********"
 # 收件人邮箱，填在单引号内；不要删去两侧中括号（使用 list 形式填入）
 # -- 单个接收邮箱：['*******@***.com']
 # -- 多个接收邮箱：['******1@***.com', '******2@***.com', ...]
-receivers = ['******@163.com']
+receivers = ['********@163.com']
 
 ####### 这一部分一般不需要修改，除非你需要自己定制 ####### 
 # 邮件标题
-title = '【' + time.strftime("%Y/%m/%d", time.localtime()) + '】' + '今日健康状况已成功申报！'
+title = '【' + datetime.datetime.now(pytz.timezone('PRC')
+                                    ).strftime("%Y/%m/%d") + '】' + '今日健康状况已成功申报！'
 # 邮件内容
-content = '今日健康状况已成功申报！申报时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n' + '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport'
+content = '今日健康状况已成功申报！申报时间：' + datetime.datetime.now(pytz.timezone('PRC')).strftime("%Y-%m-%d %H:%M:%S") + '\n' + \
+    '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + \
+    '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport'
 ####### 这一部分一般不需要修改，除非你需要自己定制 ####### 
 
 
@@ -45,12 +47,17 @@ content = '今日健康状况已成功申报！申报时间：' + time.strftime(
 # Debug 开关，非调试用途不必打开
 debug_switcher = 0
 
+
+# Email 发件人设置，不必修改
+sender = mail_user
+
 # 全局变量
 url_Form = 'http://yqtb.nwpu.edu.cn/wx/ry/jrsb.jsp' # 获取表格并进行操作
 url_Submit = 'http://yqtb.nwpu.edu.cn/wx/ry/ry_util.jsp' # 用于 POST 申报的内容
 url_for_id = 'https://uis.nwpu.edu.cn/cas/login' # 用于 Validate 登录状态
 url_for_user_info = 'http://yqtb.nwpu.edu.cn/wx/ry/jbxx_v.jsp'  # 「个人信息」一栏
 url_for_list = 'http://yqtb.nwpu.edu.cn/wx/xg/yz-mobile/rzxx_list.jsp'
+url_for_yqtb_logon = 'http://yqtb.nwpu.edu.cn//sso/login.jsp'
 email_status = 0
 # Email 实现 
 def sendEmail(email_status):
@@ -80,44 +87,77 @@ def send_email2(SMTP_host, from_account, from_passwd, to_account, subject, conte
 def getToken(url): # 动态获取 token 并传递 session
     session = requests.Session()
     res = session.get(url).text
-    token = BeautifulSoup(res, 'html.parser').find(
-        name='input',
-        attrs={
-            'name': 'lt'
-        }
-    ).get('value')
+    token = ''
     return token, session
 
 token, session = getToken(url_for_id)
 
-def login(username=username,password=password):
+def login(username=username, password=password):
     header = {
-        'Referer': url_Form,
+        'referer': url_for_id,
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Origin': 'https://uis.nwpu.edu.cn',
+        'content-Type': 'application/x-www-form-urlencoded',
+        'origin': 'https://uis.nwpu.edu.cn',
+        'cookie': 'SESSION=' + str((session.cookies.values()[0])),
+        'authority': 'uis.nwpu.edu.cn',
+        'path': '/cas/login',
+        'scheme': 'https',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'upgrade-insecure-requests': '1',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'cache-control': 'no-cache'
     }
 
     data = {
         'username': username,
         'password': password,
-        'lt': token,
         '_eventId': 'submit',
+        'currentMenu': '1',
+        'execution': 'e2s1',
+        'submit': 'One moment please...',
+        'geolocation': '',
     }
-
+    response = session.get(url_for_id)
+    cookiejar = response.cookies
+    session.headers.update(header)
     r = session.post(url_for_id, data=data, headers=header, timeout=5)
     rt = r.text  # rt 以 html 形式返回登录状态
-    
-    if rt.find('登录成功') != -1:
+    if rt.find('欢迎使用 统一身份认证 系统') != -1:
         print('登录成功')
     else:
-        if rt.find('密码错误') != -1:
-            print('密码错误, 请检查「登录信息」一栏用户名及密码是否正确')
-        else:
-            print('【大概率已登陆成功】登录异常，请重新执行')
+        print('密码错误, 请检查「登录信息」一栏用户名及密码是否正确')
+        # else:
+        #     print('【大概率已登陆成功】登录异常，请重新执行')
     # r2、r3 用于动态获取相关信息填入 Form // for POST
     # r2 操作
-    r2 = session.post(url_Form).text
+    r2a = r2 = session.post(url_Form) # 伪造一次请求，获得 JSESSIONID
+    header2 = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4204.0 Safari/537.36 Edg/86.0.586.0',
+        'cookie': 'SESSION=' + str((session.cookies.values()[0])) + '; ' + 'TGC=' + str((session.cookies.values()[1])),
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'upgrade-insecure-requests': '1',
+        'cache-control': 'no-cache'
+    }
+    header3 = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4204.0',
+        'Host': 'yqtb.nwpu.edu.cn',
+        'cookie': 'JSESSIONID=' + str((session.cookies.values()[2])),
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'upgrade-insecure-requests': '1',
+        'cache-control': 'no-cache'
+    }
+    data2 = {
+        'ticket': str((session.cookies.values()[1])),
+        'targetUrl': 'base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=',
+    }
+    r_log_on_yqtb = session.post(
+        'http://yqtb.nwpu.edu.cn//sso/login.jsp?targetUrl=base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=', headers=header2)
+
+    r_log_on_yqtb2 = session.post(url_for_yqtb_logon, data=data2, headers=header3)
+    r2 = r_log_on_yqtb2.text
     # url 指向「今日填报」页面，但被跳转到主页 [//yqtb.nwpu.edu.cn/wx/xg/yz-mobile/index.jsp]；r2 最终可以获取姓名和学院
     soup = BeautifulSoup(r2, 'html.parser')
     global RealCollege, RealName, PhoneNumber
@@ -125,13 +165,17 @@ def login(username=username,password=password):
         RealName = k.replace('姓名：', '')
     for l in soup.find('div', string=re.compile('学院')):
         RealCollege = l.replace('学院：', '')
-    # r3 操作
-    r3 = session.post(url_for_user_info).text # 在「基本信息」页面 / 此页面也可获得上述 k,l 信息，之前未发现
+    # 以上操作成功，不必修改 200724-2245
+
+    ## r3 操作
+    # 在「基本信息」页面 / 此页面也可获得上述 k,l 信息，之前未发现
+    r3 = session.post(url_for_user_info, data=data2, headers=header3).text
     soup2 = BeautifulSoup(r3, 'html.parser')
     m = soup2.find_all('span')
     PhoneNumber = m[6].string  # 提取出列表的 #6 值即为电话号码
-    # r5 操作：获得上一次填报的所在地
-    r5 = session.post(url_for_list).text
+
+    ## r5 操作：获得上一次填报的所在地
+    r5 = session.post(url_for_list, data=data2, headers=header3).text
     soup3 = BeautifulSoup(r5, 'html.parser')
     v_loc = soup3.find("span", attrs={"class": "status"}).string
     global loc_name, loc_code_str
@@ -146,9 +190,12 @@ def login(username=username,password=password):
     
 def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     HeadersForm = {
+        'Host': 'yqtb.nwpu.edu.cn',
         'Origin': 'http://yqtb.nwpu.edu.cn',
         'Referer': 'http://yqtb.nwpu.edu.cn/wx/ry/jrsb.jsp',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Cookie': 'JSESSIONID=' + str((session.cookies.values()[2])),
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4204.0 Safari/537.36 Edg/86.0.586.0'
     }
     tbDataForm = {
         'sfczbcqca': '', 
@@ -184,10 +231,22 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'xymc': RealCollege, # 学院名称；实践表明可留空
         'xssjhm': PhoneNumber, # 手机号码；实践表明可留空
     }
+    header3 = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4204.0',
+        'Host': 'yqtb.nwpu.edu.cn',
+        'cookie': 'JSESSIONID=' + str((session.cookies.values()[2])),
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'upgrade-insecure-requests': '1',
+        'cache-control': 'no-cache'
+    }
+    data2 = {
+        'ticket': str((session.cookies.values()[1])),
+        'targetUrl': 'base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=',
+    }
     if debug_switcher == 1:
         print(f'最终填报的表格内容：{tbDataForm}')
     session.post(url=url_Submit, data=tbDataForm, headers=HeadersForm)
-    r4 = session.get(url_Form).text
+    r4 = session.get(url=url_Form, data=data2, headers=header3).text
     session.close()
     if (r4.find('重新提交将覆盖上一次的信息')) != -1:
         print('申报成功！')
