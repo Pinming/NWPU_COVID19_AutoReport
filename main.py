@@ -185,8 +185,11 @@ def login(username=username, password=password):
     global loc_name, loc_code_str
     loc_name = v_loc
     loc_code = location.GetLocation(loc_name)
-    loc_code_str = loc_code[0]
-    if loc_code_str == '':
+    if loc_name != '在西安' and loc_name != '在学校':
+        loc_code_str = ''
+    else:
+        loc_code_str = str(loc_code)
+    if loc_code_str == '' and (loc_name != '在西安' or loc_name != '在学校'):
         print('获取上一次填报的信息时出现错误！' + '\n' + '请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！')
         exit()
 
@@ -218,18 +221,18 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'sfjcry': '0', # 是否接触人员
         'sfjcrysm': '', # 说明
         'sfjcqz': '0', # 是否接触确诊
-        'sfyzz': '0', # 是否
+        'sfyzz': '0', # 是否有症状
         'sfqz': '0', # 是否确诊
-        'ycqksm': '', 
-        'glqk': '0',
-        'glksrq': '',
-        'gljsrq': '',
+        'ycqksm': '',  # 异常情况说明
+        'glqk': '0', # 隔离情况
+        'glksrq': '', # 隔离开始日期
+        'gljsrq': '', # 隔离结束日期
         'tbly': 'sso', # 填报来源：SSO 单点登录
-        'glyy': '' ,
-        'qtqksm': '',
+        'glyy': '' , # 隔离原因
+        'qtqksm': '', # 其他情况说明
         'sfjcqzsm': '',
         'sfjkqk': '0',
-        'jkqksm': '',
+        'jkqksm': '', # 健康情况说明
         'sfmtbg': '',
         'qrlxzt': '',
         'xymc': RealCollege, # 学院名称；实践表明可留空
