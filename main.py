@@ -10,8 +10,8 @@ import pytz
 
 # 登录信息
 # --------------------------
-username = '2019******' # 学号
-password = '********'  # 翱翔门户密码
+username = '2019******'  # 学号
+password = '**********'  # 翱翔门户密码
 # --------------------------
 
 # Email 设置
@@ -20,13 +20,13 @@ password = '********'  # 翱翔门户密码
 # --------------------------
 # Email 开关，默认打开；如果不需要，将其赋值为 0 则关闭本功能。赋值为其他实数均为打开。
 email_switcher = 1
-# SMTP 服务器，如果使用 163 邮箱则不必修改；其他邮箱请参见说明
+# 发件方邮箱 SMTP 服务器，如果使用 163 邮箱则不必修改；其他邮箱请对应修改
 mail_host = "smtp.163.com"  
-# SMTP 端口号，一般为 465；其他邮箱请参见说明
+# 发件方邮箱 SMTP 端口号，一般（163、126、QQ 等）为 465；其他邮箱请自行搜索并修改
 mail_SMTPPort = 465  
-# 发件邮箱用户名，格式为「 *****@**.com」
-mail_user = "********@163.com"
-# 一般此处填登录密码；QQ 邮箱等特殊邮箱应填写「授权码」而非密码
+# 发件邮箱用户名，格式为「*****@**.com」
+mail_user = "*****@**.com"
+# 一般此处填登录密码
 mail_pass = "********"
 
 ### 收件人邮箱，填在单引号内；不要删去两侧中括号（使用 list 形式填入）
@@ -36,15 +36,25 @@ mail_pass = "********"
 # ---- 多个接收邮箱：['******1@***.com', '******2@***.com', ...]
 receivers = []   
 
-####### 这一部分一般不需要修改，除非你需要自己定制发送邮件的内容 ####### 
+########## 以下部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
+# 获取公告 / 请勿删除，便于发送需要用户知悉的信息
+url_notice = 'https://oss.pm-z.tech/notice_for_autoreport.txt'
+session_notice = requests.session()
+notice = session_notice.get(url_notice)
+notice.encoding="UTF-8"
+notice = notice.content.decode('UTF-8')
+
+if notice != '':
+    print(notice)
+
 # 邮件标题
 title = '【' + datetime.datetime.now(pytz.timezone('PRC')
                                     ).strftime("%Y/%m/%d") + '】' + '今日健康状况已成功申报！'
 # 邮件内容
 content = '今日健康状况已成功申报！申报时间：' + datetime.datetime.now(pytz.timezone('PRC')).strftime("%Y-%m-%d %H:%M:%S") + '\n' + \
     '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + \
-    '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport'
-####### 这一部分一般不需要修改，除非你需要自己定制发送邮件的内容 ####### 
+    '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport' + '\n' + notice
+########## 以上部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
 
 ########## ·以下内容请不要随意修改· ########## 
 # Debug 开关，非调试用途不必打开
@@ -81,18 +91,7 @@ def sendEmail():
     except:
         email_status = -1
     return email_status
- 
-def send_email2(SMTP_host, from_account, from_passwd, to_account, subject, content):
-    email_client = smtplib.SMTP(SMTP_host)
-    email_client.login(from_account, from_passwd)
-    # create msg
-    msg = MIMEText(content, 'plain', 'utf-8')
-    msg['Subject'] = Header(subject, 'utf-8')
-    msg['From'] = from_account
-    msg['To'] = to_account
-    email_client.sendmail(from_account, to_account, msg.as_string())
-    email_client.quit()
-# Email 实现结束
+
 
 session = requests.Session() # 全局 session，便于后续函数调用
 session.get(url_for_id) # 从 CAS 登录页作为登录过程起点
@@ -134,17 +133,11 @@ def login(username=username, password=password):
     else:
         print('登录失败！请检查「登录信息」一栏用户名及密码是否正确')
         exit()
-
+    if debug_switcher == 1:
+        print(session.cookies.values())
     # r2、r3 用于动态获取相关信息填入 Form // for POST
     # r2 操作
     r2 = session.post(url_Form) # 伪造一次对 Form 页面的请求，获得 JSESSIONID
-    header2 = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
-        'cookie': 'SESSION=' + str((session.cookies.values()[0])) + '; ' + 'TGC=' + str((session.cookies.values()[1])),
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'upgrade-insecure-requests': '1',
-        'cache-control': 'no-cache'
-    }
     header3 = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
         'Host': 'yqtb.nwpu.edu.cn',
@@ -158,12 +151,9 @@ def login(username=username, password=password):
         'targetUrl': 'base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=',
     }
 
-    session.post(
-        'http://yqtb.nwpu.edu.cn//sso/login.jsp?targetUrl=base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=', headers=header2)
-
     r_log_on_yqtb2 = session.post(url_for_yqtb_logon, data=data2, headers=header3)
     r2 = r_log_on_yqtb2.text
-    # url 指向「今日填报」页面，但被跳转到主页 [//yqtb.nwpu.edu.cn/wx/xg/yz-mobile/index.jsp]；r2 最终可以获取姓名和学院
+    # 登录后跳转到主页 [//yqtb.nwpu.edu.cn/wx/xg/yz-mobile/index.jsp]；r2 最终可以获取姓名和学院
     soup = BeautifulSoup(r2, 'html.parser')
     global RealCollege, RealName, PhoneNumber
     for k in soup.find('div', string=re.compile('姓名')):
@@ -185,11 +175,8 @@ def login(username=username, password=password):
     global loc_name, loc_code_str
     loc_name = v_loc
     loc_code = location.GetLocation(loc_name)
-    if loc_name != '在西安' and loc_name != '在学校':
-        loc_code_str = ''
-    else:
-        loc_code_str = str(loc_code)
-    if loc_code_str == '' and (loc_name != '在西安' or loc_name != '在学校'):
+    loc_code_str = loc_code[0]
+    if loc_code_str == '':
         print('获取上一次填报的信息时出现错误！' + '\n' + '请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！')
         exit()
 
@@ -221,18 +208,18 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'sfjcry': '0', # 是否接触人员
         'sfjcrysm': '', # 说明
         'sfjcqz': '0', # 是否接触确诊
-        'sfyzz': '0', # 是否有症状
+        'sfyzz': '0', # 是否
         'sfqz': '0', # 是否确诊
-        'ycqksm': '',  # 异常情况说明
-        'glqk': '0', # 隔离情况
-        'glksrq': '', # 隔离开始日期
-        'gljsrq': '', # 隔离结束日期
+        'ycqksm': '', 
+        'glqk': '0',
+        'glksrq': '',
+        'gljsrq': '',
         'tbly': 'sso', # 填报来源：SSO 单点登录
-        'glyy': '' , # 隔离原因
-        'qtqksm': '', # 其他情况说明
+        'glyy': '' ,
+        'qtqksm': '',
         'sfjcqzsm': '',
         'sfjkqk': '0',
-        'jkqksm': '', # 健康情况说明
+        'jkqksm': '',
         'sfmtbg': '',
         'qrlxzt': '',
         'xymc': RealCollege, # 学院名称；实践表明可留空
