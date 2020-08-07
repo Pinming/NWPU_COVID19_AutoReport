@@ -128,7 +128,7 @@ def login(username=username, password=password):
     session.get(url_for_id)
     session.headers.update(header)
     rt = session.post(url_for_id, data=data, headers=header, timeout=5).text # rt 以 html 形式返回登录状态
-    if rt.find('欢迎使用 统一身份认证 系统') != -1:
+    if rt.find('欢迎使用') != -1:
         print('登录成功！')
     else:
         print('登录失败！请检查「登录信息」一栏用户名及密码是否正确')
