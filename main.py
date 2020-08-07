@@ -10,9 +10,15 @@ import pytz
 
 # 登录信息
 # --------------------------
-username = '2019******'  # 学号
-password = '********'  # 翱翔门户密码
+username = '**********' # 学号
+password = '**********' # 翱翔门户密码
 # --------------------------
+
+# ServerChan 微信推送
+# 微信推送开关，默认打开；如果不需要，将其赋值为 0 则关闭本功能。赋值为其他实数均为打开。
+SC_switcher = 1
+# SCKEY，用于与自己的微信绑定。详见教程。
+SCKEY = '*******************************'
 
 # Email 设置
 # 如果邮箱用户名密码有误会导致发不出邮件但仍然提示发送成功！【已知 Bug，后续将修正】
@@ -25,9 +31,9 @@ mail_host = "smtp.163.com"
 # 发件方邮箱 SMTP 端口号，一般（163、126、QQ 等）为 465；其他邮箱请自行搜索并修改
 mail_SMTPPort = 465  
 # 发件邮箱用户名，格式为「*****@**.com」
-mail_user = "*****@**.com"
+mail_user = "***@**.com"
 # 一般此处填登录密码
-mail_pass = "********"
+mail_pass = "**********"
 
 ### 收件人邮箱，填在单引号内；不要删去两侧中括号（使用 list 形式填入）
 # 默认设置：如果不修改该项，则发送到发件人邮箱（我发给我自己）
@@ -36,7 +42,8 @@ mail_pass = "********"
 # ---- 多个接收邮箱：['******1@***.com', '******2@***.com', ...]
 receivers = []   
 
-########## 以下部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
+
+########## 以下部分一般不需要修改，除非你需要自己定制发送邮件或微信推送的内容 ##########
 # 获取公告 / 请勿删除，便于发送需要用户知悉的信息
 url_notice = 'https://oss.pm-z.tech/notice_for_autoreport.txt'
 session_notice = requests.session()
@@ -54,9 +61,14 @@ title = '【' + datetime.datetime.now(pytz.timezone('PRC')
 content = '今日健康状况已成功申报！申报时间：' + datetime.datetime.now(pytz.timezone('PRC')).strftime("%Y-%m-%d %H:%M:%S") + '\n' + \
     '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + \
     '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport' + '\n' + notice
-########## 以上部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
 
-########## ·以下内容请不要随意修改· ########## 
+# ServerChan 的标题与内容，和邮箱保持一致
+Title_for_SC = title
+Content_for_SC = content
+
+########## 以上部分一般不需要修改，除非你需要自己定制发送邮件或微信推送的内容 ##########
+
+########## ·以下内容请不要随意修改· ##########
 # Debug 开关，非调试用途不必打开
 debug_switcher = 0
 
@@ -75,9 +87,10 @@ url_for_id = 'https://uis.nwpu.edu.cn/cas/login' # 用于 Validate 登录状态
 url_for_user_info = 'http://yqtb.nwpu.edu.cn/wx/ry/jbxx_v.jsp'  # 「个人信息」一栏
 url_for_list = 'http://yqtb.nwpu.edu.cn/wx/xg/yz-mobile/rzxx_list.jsp'
 url_for_yqtb_logon = 'http://yqtb.nwpu.edu.cn//sso/login.jsp'
+url_for_sc = "https://sc.ftqq.com/" + SCKEY + ".send"
 
 
-# Email 实现 
+# Email 实现
 def sendEmail():
     email_status = 0
     message = MIMEText(content, 'plain', 'utf-8')  # 内容, 格式, 编码
@@ -195,7 +208,7 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36'
     }
     tbDataForm = {
-        'sfczbcqca': '', 
+        'sfczbcqca': '',
         'czbcqcasjd': '',
         'sfczbcfhyy': '',
         'czbcfhyysjd': '',
@@ -213,7 +226,7 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'sfjcqz': '0', # 是否接触确诊
         'sfyzz': '0', # 是否有症状
         'sfqz': '0', # 是否确诊
-        'ycqksm': '', 
+        'ycqksm': '',
         'glqk': '0', # 隔离情况
         'glksrq': '', # 隔离开始日期
         'gljsrq': '', # 隔离结束日期
@@ -245,8 +258,17 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     session.post(url=url_Submit, data=tbDataForm, headers=HeadersForm)
     r4 = session.get(url=url_Form, data=data2, headers=header3).text
     session.close()
+    def SCPush():
+        data_for_push = {
+            "text": Title_for_SC,
+            "desp": Content_for_SC
+        }
+        requests.post(url_for_sc, data=data_for_push)
+        print('微信推送成功！如果没有收到信息请检查 ServerChan 配置是否有误。')
     if (r4.find('重新提交将覆盖上一次的信息')) != -1:
         print('申报成功！')
+        if SC_switcher == 1:
+            SCPush()
         if email_switcher == 1:
             email_status = sendEmail()
             if debug_switcher == 1:
@@ -263,3 +285,4 @@ def execute(username, password):
     submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber)
 
 execute(username, password)
+
