@@ -10,7 +10,7 @@ import pytz
 
 # 登录信息
 # --------------------------
-username = '**********' # 学号
+username = '2019******' # 学号
 password = '**********' # 翱翔门户密码
 # --------------------------
 
@@ -31,7 +31,7 @@ mail_host = "smtp.163.com"
 # 发件方邮箱 SMTP 端口号，一般（163、126、QQ 等）为 465；其他邮箱请自行搜索并修改
 mail_SMTPPort = 465  
 # 发件邮箱用户名，格式为「*****@**.com」
-mail_user = "***@**.com"
+mail_user = "*********@**.com"
 # 一般此处填登录密码
 mail_pass = "**********"
 
@@ -108,6 +108,15 @@ def sendEmail():
 
 session = requests.Session() # 全局 session，便于后续函数调用
 session.get(url_for_id) # 从 CAS 登录页作为登录过程起点
+
+# ServerChan 推送
+def SCPush():
+    data_for_push = {
+        "text": Title_for_SC,
+        "desp": Content_for_SC
+    }
+    requests.post(url_for_sc, data=data_for_push)
+    print('微信推送成功！如果没有收到信息请检查 ServerChan 配置是否有误。')
 
 def login(username=username, password=password):
     header = {
@@ -258,13 +267,7 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     session.post(url=url_Submit, data=tbDataForm, headers=HeadersForm)
     r4 = session.get(url=url_Form, data=data2, headers=header3).text
     session.close()
-    def SCPush():
-        data_for_push = {
-            "text": Title_for_SC,
-            "desp": Content_for_SC
-        }
-        requests.post(url_for_sc, data=data_for_push)
-        print('微信推送成功！如果没有收到信息请检查 ServerChan 配置是否有误。')
+
     if (r4.find('重新提交将覆盖上一次的信息')) != -1:
         print('申报成功！')
         if SC_switcher == 1:
