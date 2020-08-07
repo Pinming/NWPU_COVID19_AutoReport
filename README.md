@@ -37,7 +37,7 @@
 `password` | 填入对应用户的密码
 `SC_switcher` |  ServerChan 微信推送服务开关，默认开启服务，赋值为 `1`；填 `0` 则关闭；<br>如果关闭了该服务则不需要配置 `SCKey`。
 `SCKEY` |  ServerChan 微信推送服务对应的 Key，用于绑定自己的微信`。
-`email_switcher` | Email 服务开关，默认开启服务，赋值为 `1`；填 `0` 则关闭<br>如果关闭了 Email 服务则不需要配置以下变量。
+`email_switcher` | Email 服务开关，默认开启服务，赋值为 `1`；填 `0` 则关闭。<br>如果关闭了 Email 服务则不需要配置以下变量。
 `mail_host` | （可选）**发送方**的 SMTP 服务器，如果使用 163 邮箱则不必修改；其他邮箱请对应更改。
 `mail_SMTPPort` | （可选）**发送方**的 SMTP 端口号，如果使用 163 邮箱则不必修改；其他邮箱请对应更改。
 `mail_user` | （可选）发送方邮箱，格式为 `****@***.com`。
