@@ -43,7 +43,7 @@ mail_pass = "**********"
 receivers = []   
 
 
-########## 以下部分一般不需要修改，除非你需要自己定制发送邮件或微信推送的内容 ##########
+########## 以下部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
 # 获取公告 / 请勿删除，便于发送需要用户知悉的信息
 url_notice = 'https://oss.pm-z.tech/notice_for_autoreport.txt'
 session_notice = requests.session()
@@ -58,15 +58,15 @@ if notice != '':
 title = '【' + datetime.datetime.now(pytz.timezone('PRC')
                                     ).strftime("%Y/%m/%d") + '】' + '今日健康状况已成功申报！'
 # 邮件内容
-content = '今日健康状况已成功申报！申报时间：' + datetime.datetime.now(pytz.timezone('PRC')).strftime("%Y-%m-%d %H:%M:%S") + '\n' + \
+content = '今日健康状况已成功申报！' + '\n' + '申报时间：' + datetime.datetime.now(pytz.timezone('PRC')).strftime("%Y-%m-%d %H:%M:%S") + '\n' + \
     '⚠️ 请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。因使用该软件误报身体状况而引发的不良后果应由您自行承担。' + \
     '\n' + '本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 Github：https://github.com/Pinming/NWPU_COVID19_AutoReport' + '\n' + notice
 
 # ServerChan 的标题与内容，和邮箱保持一致
 Title_for_SC = title
-Content_for_SC = content
+Content_for_SC = content.replace('\n', '    \n')
 
-########## 以上部分一般不需要修改，除非你需要自己定制发送邮件或微信推送的内容 ##########
+########## 以上部分一般不需要修改，除非你需要自己定制发送邮件的内容 ##########
 
 ########## ·以下内容请不要随意修改· ##########
 # Debug 开关，非调试用途不必打开
@@ -197,16 +197,16 @@ def login(username=username, password=password):
     global loc_name, loc_code_str
     loc_name = v_loc
     loc_code = location.GetLocation(loc_name)
-    if loc_name == '在西安' or loc_name == '在学校':
-        loc_code_str = ''
+    if loc_name == '在西安':
+        loc_code_str = '2'
+    elif loc_name == '在学校':
+        loc_code_str = '1'
     else:
         loc_code_str = loc_code[0]
     if loc_code_str == '' and loc_name != '在西安' and loc_name != '在学校':
         print('获取上一次填报的信息时出现错误！' + '\n' + '请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！')
         exit()
 
-
-    
 def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     HeadersForm = {
         'Host': 'yqtb.nwpu.edu.cn',
@@ -248,7 +248,8 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         'sfmtbg': '',
         'qrlxzt': '',
         'xymc': RealCollege, # 学院名称；实践表明可留空
-        'xssjhm': PhoneNumber, # 手机号码；实践表明可留空
+        'xssjhm': PhoneNumber,  # 手机号码；实践表明可留空
+        'xysymt': '1', # 西安市一码通：绿码
     }
     header3 = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4204.0',
@@ -283,9 +284,9 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     else:
         print('申报失败，请重试！')
 
+
 def execute(username, password):
     login(username, password)
     submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber)
 
 execute(username, password)
-
