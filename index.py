@@ -97,7 +97,20 @@ session.get(url_for_id)  # 从 CAS 登录页作为登录过程起点
 
 
 def SCPush(push_content):
-    data_for_push = {"text": Title_for_SC, "desp": Content_for_SC}
+    SC_Content = f"""
+#### 💪今日健康情况已申报
+#### 📚申报内容
+    姓名：{push_content['userName']}
+    申报时间：{datetime.datetime.now(pytz.timezone("PRC")).strftime("%Y-%m-%d %H:%M:%S")}
+    当前位置：{push_content['szcsmc']}
+#### ⚡注意事项
+    请确保您的身体状况良好再使用该软件，做到如实申报自身身体状况。若身体出现异常，应立即停止使用该软件并及时于学校系统更改每日申报情况。
+    因使用该软件误报身体状况而引发的不良后果应由您自行承担。
+#### 📢公告
+本软件仅限于技术用途，切勿滥用！跟进本软件更新，详见 [Github](https://github.com/Pinming/NWPU_COVID19_AutoReport)。
+{notice}
+"""
+    data_for_push = {"text": Title_for_SC, "desp": SC_Content}
     requests.post(url_for_sc, data=data_for_push)
     logging.info("微信推送成功！如果没有收到信息请检查 ServerChan 配置是否有误。")
 
@@ -265,7 +278,7 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
     if (r4.find("重新提交将覆盖上一次的信息")) != -1:
         logging.info("申报成功！")
         if SC_switcher == 1:
-            SCPush(str(tbDataForm))
+            SCPush(tbDataForm)
         if email_switcher == 1:
             email_status = sendEmail()
             if debug_switcher == 1:
