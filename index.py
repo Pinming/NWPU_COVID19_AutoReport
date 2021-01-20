@@ -278,10 +278,10 @@ def submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber):
         logging.info("申报失败，请重试！")
 
 
-def execute(event="", context=""):
+def handler(event="", context=""):
     login(username, password)
     submit(loc_code_str, loc_name, RealName, RealCollege, PhoneNumber)
 
 
 if __name__ == "__main__":
-    execute()
+    handler()
