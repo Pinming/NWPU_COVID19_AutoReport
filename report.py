@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import *
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -245,8 +244,10 @@ class NWPU_Yqtb_Site(object):
     
     # 判断上一次填报是否为今天
     def judge_last_report_is_today(self, report_time):
+        # 获取本机时间并转为东 8 区，部分云函数主机上的时间是 UTC 时间，会导致判断有误。
+        tz = timezone(timedelta(hours=+8))
         report_time = self.string_toDatetime(report_time)
-        if report_time.date() == datetime.today().date():
+        if report_time.date() == datetime.today().astimezone(tz).date():
             return True
         else:
             return False
