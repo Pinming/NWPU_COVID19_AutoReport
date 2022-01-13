@@ -5,9 +5,7 @@
 用于完成西工大每日健康申报的自动化程序。在进行自动填报的同时通过微信推送或 Email 提醒填报结果。    
 本程序已经适配 2021 年 12 月疫情填报系统改动，确认兼容。
 
-> 以下内容因长期未更新已经过时，将在近期更新。
-
-~~想了解更多，还可以阅读 https://www.pm-z.tech/2020/07/26/Auto_Reporter_For_COVID19~~
+想了解更多，还可以阅读 https://www.pm-z.tech/2020/07/26/Auto_Reporter_For_COVID19
 
 # ⚠️ 使用前请注意！
 * 本软件设计之本意为技术学习，请在**遵循法律及学校各项规定**的前提下使用本软件。
@@ -34,9 +32,9 @@
 `SC_switcher` |  ServerChan 微信推送服务开关，默认开启服务，赋值为 `1`；填 `0` 则关闭；<br>如果关闭了该服务则不需要配置 `SCKey`。
 `SCKEY` |  ServerChan 微信推送服务对应的 Key，用于绑定自己的微信。
 
-> 以下内容因长期未更新已经过时，将在近期更新。
-
-~~关于 ServerChan 微信推送的配置，请参阅本文：https://www.pm-z.tech/2020/08/07/Auto_Reporter_For_COVID19_2nd/~~
+> 关于 ServerChan 微信推送的配置，请参阅 [ServerChan 官方页面](https://sct.ftqq.com/sendkey) 。
+> 
+> 其实只要绑定微信获得 `SCKEY` 就可以了，相当简单了。
 
 # 云端部署方法
 
