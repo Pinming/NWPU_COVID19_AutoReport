@@ -12,10 +12,7 @@ from lxml import etree
 url_jrsb = 'http://yqtb.nwpu.edu.cn/wx/ry/jrsb.jsp'  # 获取表格并进行操作
 url_ry_util = 'http://yqtb.nwpu.edu.cn/wx/ry/ry_util.jsp'  # 用于 POST 申报的内容
 url_cas_login = 'https://uis.nwpu.edu.cn/cas/login'  # 用于 Validate 登录状态
-url_ry_jbxx = 'http://yqtb.nwpu.edu.cn/wx/ry/jbxx_v.jsp'  # yqtb 系统「基本信息」一栏
 url_rzxx_list = 'http://yqtb.nwpu.edu.cn/wx/xg/yz-mobile/rzxx_list.jsp'  # 日报列表
-url_sso_login = 'http://yqtb.nwpu.edu.cn//sso/login.jsp'
-
 
 # 构造疫情填报网站对象，attr 实际上为 POST Form 时所需要的一些值
 class NWPU_Yqtb_Site(object):
@@ -32,8 +29,6 @@ class NWPU_Yqtb_Site(object):
         self.hsjc = ""
         self.sign = ""
         self.timeStamp = ""
-        self.last_unsubmitted_report_time = ""
-        self.last_submitted_report_time = ""
         self.data_for_submit = None
     
     # 登录
