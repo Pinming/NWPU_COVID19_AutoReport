@@ -1,6 +1,7 @@
 import user_config
 from report import NWPU_Yqtb_Site
 
+
 def handler(event, context):
     username = user_config.username
     password = user_config.password
@@ -8,6 +9,13 @@ def handler(event, context):
     yqtb.login(username, password)
     yqtb.init_info()
     yqtb.submit()
-    
+
+
+# 如需在本地使用或调试，请移除下列代码注释
 # if __name__ == '__main__':
-#     handler()
+#     username = user_config.username
+#     password = user_config.password
+#     yqtb = NWPU_Yqtb_Site()
+#     yqtb.login(username, password)
+#     yqtb.init_info()
+#     yqtb.submit()
