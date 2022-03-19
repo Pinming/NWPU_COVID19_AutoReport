@@ -67,7 +67,7 @@
     ```
     git clone https://github.com/Pinming/NWPU_COVID19_AutoReport.git
     mv ./NWPU_COVID19_AutoReport/* .
-    pip install -r requirements.txt -t `pwm`
+    pip install -r requirements.txt -t `pwd`
     ```
     ![README-2022-01-13-20-57-11](https://oss.pm-z.tech/img/upload/README-2022-01-13-20-57-11.png)
 
