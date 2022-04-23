@@ -78,78 +78,62 @@ class NWPU_Yqtb_Site(object):
     
     # 初始化当次填报信息
     def init_info(self):
-        self.session.post(url_jrsb)
-        header_for_init = {
+        # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `timeStamp` & `sign`。
+        res_jrsb = self.session.get(url_jrsb)
+        while (res_jrsb.url != "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp"):
+            res_jrsb = self.session.get(url_jrsb)
+        
+        self.timeStamp = re.findall(re.compile('(?<=&timeStamp=).*(?=\')'),
+                                    res_jrsb.text)[0]
+        self.sign = re.findall(re.compile('(?<=sign=).*(?=&)'),
+                               res_jrsb.text)[0]
+        # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `param_data`。
+        param_data_str = re.findall(re.compile('var paramData = (.*?);'),
+                                    res_jrsb.text)[2]
+        # 再在 `param_data` 中获取 `name`、`xymc`、`xssjhm` 三个信息。
+        self.name = re.findall(re.compile('(?<=userName:\').*(?=\',szcsbm)'),
+                               param_data_str)[0]
+        self.xymc = re.findall(re.compile('(?<=xymc:\').*(?=\',)'),
+                               param_data_str)[0]
+        self.xssjhm = re.findall(re.compile('(?<=xssjhm:\').*(?=\')'),
+                                 param_data_str)[0]
+        
+        
+        # 在 `wx/xg/yz-mobile/rzxx_list.jsp` 中，获取 `szcsmc`，并查 `location.py` 得 `szcsbm`
+        header_for_rzxx = {
             'User-Agent':
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
             'Host': 'yqtb.nwpu.edu.cn',
-            'cookie': 'JSESSIONID=' + str((self.session.cookies.values()[2])),
+            'cookie': 'showQuestionnaire=-1; JSESSIONID=' + str((self.session.cookies.values()[2])),
             'accept':
                 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'upgrade-insecure-requests': '1',
             'cache-control': 'no-cache'
         }
-        data_for_init = {
-            'ticket':
-                str((self.session.cookies.values()[1])),
-            'targetUrl':
-                'base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=',
-        }
+        rzxx_list = self.session.get(url_rzxx_list, headers=header_for_rzxx)
+        rzxx_list_str = rzxx_list.text
+        soup = BeautifulSoup(rzxx_list_str, 'html.parser')
+        loc_name = soup.find("span", attrs={"class": "status"}).string
+        self.szcsmc = loc_name
+        loc_code = location.get_location(loc_name)
+        if loc_name == "在西安":
+            self.szcsbm = "2"
+        elif loc_name == "在学校":
+            self.szcsbm = "1"
+        else:
+            self.szcsbm = loc_code[0]
+        if self.szcsbm == "" and loc_name != "在西安" and loc_name != "在学校":
+            print(
+                "获取上一次填报的信息时出现错误！"
+                + "\n"
+                + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
+            )
+            if user_config.SC_switcher == 1:
+                Pusher.sc_push_when_wrong_info(self)
+            exit()
         
         
-        # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `timeStamp` & `sign`。
-        for i in range(4):
-            try:
-                res_jrsb = self.session.get(url_jrsb)
-                self.timeStamp = re.findall(re.compile('(?<=&timeStamp=).*(?=\')'),
-                                            res_jrsb.text)[0]
-                self.sign = re.findall(re.compile('(?<=sign=).*(?=&)'),
-                                       res_jrsb.text)[0]
-                # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `param_data`。
-                param_data_str = re.findall(re.compile('var paramData = (.*?);'),
-                                            res_jrsb.text)[2]
-                # 再在 `param_data` 中获取 `name`、`xymc`、`xssjhm` 三个信息。
-                self.name = re.findall(re.compile('(?<=userName:\').*(?=\',szcsbm)'),
-                                       param_data_str)[0]
-                self.xymc = re.findall(re.compile('(?<=xymc:\').*(?=\',)'),
-                                       param_data_str)[0]
-                self.xssjhm = re.findall(re.compile('(?<=xssjhm:\').*(?=\')'),
-                                         param_data_str)[0]
-                break
-            except Exception as e:
-                print('连接超时，尝试重新初始化填报数据')
-                time.sleep(2)
-        
-        
-        # 在 `wx/xg/yz-mobile/rzxx_list.jsp` 中，获取 `szcsmc`，并查 `location.py` 得 `szcsbm`
-        for i in range(4):
-            try:
-                rzxx_list_str = self.session.post(url_rzxx_list, data=data_for_init, headers=header_for_init).text
-                soup = BeautifulSoup(rzxx_list_str, 'html.parser')
-                loc_name = soup.find("span", attrs={"class": "status"}).string
-                self.szcsmc = loc_name
-                loc_code = location.get_location(loc_name)
-                if loc_name == "在西安":
-                    self.szcsbm = "2"
-                elif loc_name == "在学校":
-                    self.szcsbm = "1"
-                else:
-                    self.szcsbm = loc_code[0]
-                if self.szcsbm == "" and loc_name != "在西安" and loc_name != "在学校":
-                    print(
-                        "获取上一次填报的信息时出现错误！"
-                        + "\n"
-                        + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
-                    )
-                    if user_config.SC_switcher == 1:
-                        Pusher.sc_push_when_wrong_info(self)
-                    exit()
-                break
-                
-                # self.hsjc = self.get_last_hsjc_status(data_for_init, header_for_init)
-            except Exception as e:
-                print('连接超时，尝试重新获取地理信息')
-                time.sleep(2)
+        # self.hsjc = self.get_last_hsjc_status(data_for_init, header_for_init)
             
                 
     
@@ -165,12 +149,6 @@ class NWPU_Yqtb_Site(object):
                 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'upgrade-insecure-requests': '1',
             'cache-control': 'no-cache'
-        }
-        data_for_init = {
-            'ticket':
-                str((self.session.cookies.values()[1])),
-            'targetUrl':
-                'base64aHR0cDovL3lxdGIubndwdS5lZHUuY24vL3d4L3hnL3l6LW1vYmlsZS9pbmRleC5qc3A=',
         }
         header_for_submit = {
             "Host": "yqtb.nwpu.edu.cn",
@@ -227,9 +205,7 @@ class NWPU_Yqtb_Site(object):
     # 获取最近一次日报填写页
     def get_last_report(self, header):
         # GET 日报填写列表页
-        rzxx_list_page = self.session.get(
-            'https://yqtb.nwpu.edu.cn/wx/xg/yz-mobile/rzxx_list.jsp?type=xs',
-            headers=header)
+        rzxx_list_page = self.session.get(url_rzxx_list, headers=header)
         # 获取最近一次日报填写页的 URL
         url_last_detail = "https://yqtb.nwpu.edu.cn" + \
                           etree.HTML(rzxx_list_page.text).xpath('//*[@id="form1"]/div/a[1]/@href')[0]
@@ -237,10 +213,7 @@ class NWPU_Yqtb_Site(object):
         detail_page = self.session.get(url_last_detail, headers=header)
         return detail_page.text
     
-    # 把字符串转成 datetime
-    def string_toDatetime(self, st):
-        return datetime.strptime(st, "%Y-%m-%d %H:%M:%S")
-    
+
     # 判断上一次填报是否为今天
     def judge_last_report_is_today(self, report_time):
         # 获取本机时间并转为东 8 区，部分云函数主机上的时间是 UTC 时间，会导致判断有误。
@@ -257,3 +230,7 @@ class NWPU_Yqtb_Site(object):
             etree.HTML(self.get_last_report(header)).xpath(
                 '/html/body/div[1]/div[2]/div/div[2]/div[1]/div[2]/text()')[0]
         return last_report_time
+
+    # 把字符串转成 datetime
+    def string_toDatetime(self, st):
+        return datetime.strptime(st, "%Y-%m-%d %H:%M:%S")
