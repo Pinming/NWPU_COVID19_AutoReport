@@ -12,7 +12,7 @@ url_for_sc = "https://sctapi.ftqq.com/" + user_config.SCKEY + ".send"
 
 # ServerChan 推送
 class Pusher(object):
-    def scPush(site):
+    def sc_push_successful(site):
         notice = session_notice.get(url_notice)
         notice.encoding = "UTF-8"
         notice = notice.content.decode('UTF-8')
@@ -26,7 +26,6 @@ class Pusher(object):
 - 姓名：{site.name}
 - 申报时间：{datetime.datetime.now(pytz.timezone("PRC")).strftime("%Y-%m-%d %H:%M:%S")}
 - 当前位置：{site.szcsmc}
-- 48 小时核酸检测状态：{site.hsjc_to_string(site.hsjc)}
 
 ## ⚠ 注意事项
 
@@ -44,9 +43,9 @@ class Pusher(object):
             "channel": "9"
         }
         requests.post(url_for_sc, data=data_for_push)
-        print('微信推送成功！如果没有收到信息请检查 ServerChan 配置是否有误。')
+        print('微信推送请求已发出 | 如果没有收到信息请检查 ServerChan 配置是否有误。')
     
-    def sc_push_when_login_failed(site):
+    def sc_push_when_login_failed(self):
         data_for_push_failed = {
             "title":
                 '今日疫情填报失败 | 翱翔门户登陆失败',
@@ -58,7 +57,7 @@ class Pusher(object):
 - 您的翱翔门户用户名或密码填写有误；
 - 学校对翱翔门户登陆系统做出了改动。
 
-若原因为后者，请持续关注 https://github.com/Pinming/NWPU_COVID19_AutoReport，等待软件更新再试。
+若原因为后者，请持续关注 https://github.com/Pinming/NWPU_COVID19_AutoReport ，等待软件更新再试。
                 '''
         }
         requests.post(url_for_sc, data=data_for_push_failed)
@@ -73,13 +72,12 @@ class Pusher(object):
 ❌ 初始化或上传填报信息时出现错误！
 
 出现该问题的可能原因：
-- 学校对填报问卷的问题做出了改动；
-    该种情况，请持续关注 https://github.com/Pinming/NWPU_COVID19_AutoReport，等待软件更新再试。
+- 学校对填报问卷的问题或对疫情填报系统后台做出了改动；
+    该种情况，请持续关注 https://github.com/Pinming/NWPU_COVID19_AutoReport ，等待软件更新再试。
 - 本软件获取您所填写的地理信息时出现了错误。
     该种情况，请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！
-
-                '''
+                ''' + '\n' + f'疫情填报系统返回的错误信息：{site.submit_err_info}'
         }
         requests.post(url_for_sc, data=data_for_wrong_info)
-        print('登陆失败 | 错误提示已通过微信推送。')
+        print('初始化或上传填报信息时出现错误 | 错误提示已通过微信推送。')
         
