@@ -20,7 +20,7 @@ class NWPU_Yqtb_Site(object):
     def __init__(self):
         self.session = requests.Session()
         # 从 CAS 登录页作为登录过程起点
-        self.session.get(url_cas_login)
+        self.login_page = self.session.get(url_cas_login)
         # 供填报时使用的数据
         self.name = ""
         self.xymc = ""
@@ -41,7 +41,7 @@ class NWPU_Yqtb_Site(object):
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
             'content-Type': 'application/x-www-form-urlencoded',
             'origin': 'https://uis.nwpu.edu.cn',
-            'cookie': 'SESSION=' + str((self.session.cookies.values()[0])),
+            'cookie': '',
             'authority': 'uis.nwpu.edu.cn',
             'path': '/cas/login',
             'scheme': 'https',
@@ -54,19 +54,19 @@ class NWPU_Yqtb_Site(object):
             'sec-fetch-user': '?1',
             'cache-control': 'no-cache'
         }
+        
         data_for_login = {
             'username': username,
             'password': password,
             '_eventId': 'submit',
             'currentMenu': '1',
-            'execution': 'e2s1',
+            'execution': re.findall("""(?<=name="execution" value=").*(?=\="/>)""", self.login_page.text)[0],
             'submit': 'One moment please...',
             'geolocation': '',
         }
         self.username = username
         self.password = password
-        self.session.get(url_cas_login)
-        self.session.headers.update(header_for_login)
+
         res_login = self.session.post(url_cas_login, data=data_for_login, headers=header_for_login)
         if (res_login.text.find('欢迎使用')) != -1:
             print('登陆成功！')
@@ -97,14 +97,13 @@ class NWPU_Yqtb_Site(object):
                                param_data_str)[0]
         self.xssjhm = re.findall(re.compile('(?<=xssjhm:\').*(?=\')'),
                                  param_data_str)[0]
-        
-        
+
         # 在 `wx/xg/yz-mobile/rzxx_list.jsp` 中，获取 `szcsmc`，并查 `location.py` 得 `szcsbm`
         header_for_rzxx = {
             'User-Agent':
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
             'Host': 'yqtb.nwpu.edu.cn',
-            'cookie': 'showQuestionnaire=-1; JSESSIONID=' + str((self.session.cookies.values()[2])),
+            'cookie': 'showQuestionnaire=-1; JSESSIONID=' + str((self.session.cookies.values()[1])),
             'accept':
                 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'upgrade-insecure-requests': '1',
@@ -144,7 +143,7 @@ class NWPU_Yqtb_Site(object):
             'User-Agent':
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
             'Host': 'yqtb.nwpu.edu.cn',
-            'cookie': 'JSESSIONID=' + str((self.session.cookies.values()[2])),
+            'cookie': 'JSESSIONID=' + str((self.session.cookies.values()[1])),
             'accept':
                 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'upgrade-insecure-requests': '1',
@@ -154,7 +153,7 @@ class NWPU_Yqtb_Site(object):
             "Host": "yqtb.nwpu.edu.cn",
             "Referer": "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Cookie": "JSESSIONID=" + str((self.session.cookies.values()[2])),
+            "Cookie": "JSESSIONID=" + str((self.session.cookies.values()[1])),
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.4976.0 Safari/537.36",
             "Content-Length": "196",
         }
