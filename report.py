@@ -2,11 +2,11 @@ from datetime import *
 import requests
 import re
 from bs4 import BeautifulSoup
+from lxml import etree
+import traceback
 import location
 import user_config
 from pusher import Pusher
-from lxml import etree
-import time
 
 # URL 常量
 url_jrsb = 'http://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp'  # 获取表格并进行操作
@@ -27,7 +27,6 @@ class NWPU_Yqtb_Site(object):
         self.xssjhm = ""
         self.szcsbm = ""
         self.szcsmc = ""
-        # self.hsjc = ""
         self.sign = ""
         self.timeStamp = ""
         self.submit_err_info = ""
@@ -55,13 +54,12 @@ class NWPU_Yqtb_Site(object):
                 'sec-fetch-user': '?1',
                 'cache-control': 'no-cache'
             }
-            
             data_for_login = {
                 'username': username,
                 'password': password,
                 '_eventId': 'submit',
-                'currentMenu': '1',
-                'execution': re.findall("""(?<=name="execution" value=").*(?=\="/>)""", self.login_page.text)[0],
+                'currentMenu': etree.HTML(self.login_page.text).xpath('//@value')[2],
+                'execution': etree.HTML(self.login_page.text).xpath('//@value')[3],
                 'submit': 'One moment please...',
                 'geolocation': '',
             }
@@ -74,12 +72,12 @@ class NWPU_Yqtb_Site(object):
             else:
                 print('登录失败！请检查「登录信息」一栏用户名及密码是否正确')
                 if user_config.SC_switcher == 1:
-                    Pusher.sc_push_when_login_failed(self)
+                    Pusher.sc_push_when_login_failed(self, '登录失败！请检查「登录信息」一栏用户名及密码是否正确')
                 exit()
-        except:
+        except Exception:
             print('登录失败！翱翔门户登录过程出现异常')
             if user_config.SC_switcher == 1:
-                Pusher.sc_push_when_login_failed(self)
+                Pusher.sc_push_when_login_failed(self, traceback.print_exc())
             exit()
     
     # 初始化当次填报信息
@@ -111,7 +109,7 @@ class NWPU_Yqtb_Site(object):
                 + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
             )
             if user_config.SC_switcher == 1:
-                Pusher.sc_push_when_wrong_info(self)
+                Pusher.sc_push_when_wrong_info(self, traceback.print_exc())
             exit()
         # 在 `wx/xg/yz-mobile/rzxx_list.jsp` 中，获取 `szcsmc`，并查 `location.py` 得 `szcsbm`
         header_for_rzxx = {
@@ -144,7 +142,7 @@ class NWPU_Yqtb_Site(object):
                     + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
                 )
                 if user_config.SC_switcher == 1:
-                    Pusher.sc_push_when_wrong_info(self)
+                    Pusher.sc_push_when_wrong_info(self, traceback.print_exc())
                 exit()
         except:
             print(
@@ -153,7 +151,7 @@ class NWPU_Yqtb_Site(object):
                 + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
             )
             if user_config.SC_switcher == 1:
-                Pusher.sc_push_when_wrong_info(self)
+                Pusher.sc_push_when_wrong_info(self, traceback.print_exc())
             exit()
         
     
@@ -186,7 +184,7 @@ class NWPU_Yqtb_Site(object):
                 + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
             )
             if user_config.SC_switcher == 1:
-                Pusher.sc_push_when_get_submit_page_error(self)
+                Pusher.sc_push_when_get_submit_page_error(self, traceback.print_exc())
             exit()
         self.data_for_submit = {
             'hsjc': '1',
@@ -230,7 +228,7 @@ class NWPU_Yqtb_Site(object):
         else:
             print('申报失败，请重试！')
             if user_config.SC_switcher == 1:
-                Pusher.sc_push_when_wrong_info(self)
+                Pusher.sc_push_when_wrong_info(self, traceback.print_exc())
     
     # 获取最近一次日报填写页
     def get_last_report(self, header):
