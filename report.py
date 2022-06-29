@@ -35,69 +35,84 @@ class NWPU_Yqtb_Site(object):
     
     # 登录
     def login(self, username, password):
-        header_for_login = {
-            'referer': url_cas_login,
-            'User-Agent':
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
-            'content-Type': 'application/x-www-form-urlencoded',
-            'origin': 'https://uis.nwpu.edu.cn',
-            'cookie': '',
-            'authority': 'uis.nwpu.edu.cn',
-            'path': '/cas/login',
-            'scheme': 'https',
-            'accept':
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'upgrade-insecure-requests': '1',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'same-origin',
-            'sec-fetch-user': '?1',
-            'cache-control': 'no-cache'
-        }
-        
-        data_for_login = {
-            'username': username,
-            'password': password,
-            '_eventId': 'submit',
-            'currentMenu': '1',
-            'execution': re.findall("""(?<=name="execution" value=").*(?=\="/>)""", self.login_page.text)[0],
-            'submit': 'One moment please...',
-            'geolocation': '',
-        }
-        self.username = username
-        self.password = password
-
-        res_login = self.session.post(url_cas_login, data=data_for_login, headers=header_for_login)
-        if (res_login.text.find('欢迎使用')) != -1:
-            print('登陆成功！')
-        else:
-            print('登录失败！请检查「登录信息」一栏用户名及密码是否正确')
+        try:
+            header_for_login = {
+                'referer': url_cas_login,
+                'User-Agent':
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
+                'content-Type': 'application/x-www-form-urlencoded',
+                'origin': 'https://uis.nwpu.edu.cn',
+                'cookie': '',
+                'authority': 'uis.nwpu.edu.cn',
+                'path': '/cas/login',
+                'scheme': 'https',
+                'accept':
+                    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'upgrade-insecure-requests': '1',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-user': '?1',
+                'cache-control': 'no-cache'
+            }
+            
+            data_for_login = {
+                'username': username,
+                'password': password,
+                '_eventId': 'submit',
+                'currentMenu': '1',
+                'execution': re.findall("""(?<=name="execution" value=").*(?=\="/>)""", self.login_page.text)[0],
+                'submit': 'One moment please...',
+                'geolocation': '',
+            }
+            self.username = username
+            self.password = password
+    
+            res_login = self.session.post(url_cas_login, data=data_for_login, headers=header_for_login)
+            if (res_login.text.find('欢迎使用')) != -1:
+                print('登陆成功！')
+            else:
+                print('登录失败！请检查「登录信息」一栏用户名及密码是否正确')
+                if user_config.SC_switcher == 1:
+                    Pusher.sc_push_when_login_failed(self)
+                exit()
+        except:
+            print('登录失败！翱翔门户登录过程出现异常')
             if user_config.SC_switcher == 1:
                 Pusher.sc_push_when_login_failed(self)
             exit()
     
     # 初始化当次填报信息
     def init_info(self):
-        # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `timeStamp` & `sign`。
-        res_jrsb = self.session.get(url_jrsb)
-        while (res_jrsb.url != "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp"):
+        try:
+            # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `timeStamp` & `sign`。
             res_jrsb = self.session.get(url_jrsb)
-        
-        self.timeStamp = re.findall(re.compile('(?<=&timeStamp=).*(?=\')'),
-                                    res_jrsb.text)[0]
-        self.sign = re.findall(re.compile('(?<=sign=).*(?=&)'),
-                               res_jrsb.text)[0]
-        # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `param_data`。
-        param_data_str = re.findall(re.compile('var paramData = (.*?);'),
-                                    res_jrsb.text)[2]
-        # 再在 `param_data` 中获取 `name`、`xymc`、`xssjhm` 三个信息。
-        self.name = re.findall(re.compile('(?<=userName:\').*(?=\',szcsbm)'),
-                               param_data_str)[0]
-        self.xymc = re.findall(re.compile('(?<=xymc:\').*(?=\',)'),
-                               param_data_str)[0]
-        self.xssjhm = re.findall(re.compile('(?<=xssjhm:\').*(?=\')'),
-                                 param_data_str)[0]
-
+            while (res_jrsb.url != "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp"):
+                res_jrsb = self.session.get(url_jrsb)
+            
+            self.timeStamp = re.findall(re.compile('(?<=&timeStamp=).*(?=\')'),
+                                        res_jrsb.text)[0]
+            self.sign = re.findall(re.compile('(?<=sign=).*(?=&)'),
+                                   res_jrsb.text)[0]
+            # 在 `/wx/ry/jrsb.jsp` 页面中，获取 `param_data`。
+            param_data_str = re.findall(re.compile('var paramData = (.*?);'),
+                                        res_jrsb.text)[2]
+            # 再在 `param_data` 中获取 `name`、`xymc`、`xssjhm` 三个信息。
+            self.name = re.findall(re.compile('(?<=userName:\').*(?=\',szcsbm)'),
+                                   param_data_str)[0]
+            self.xymc = re.findall(re.compile('(?<=xymc:\').*(?=\',)'),
+                                   param_data_str)[0]
+            self.xssjhm = re.findall(re.compile('(?<=xssjhm:\').*(?=\')'),
+                                     param_data_str)[0]
+        except:
+            print(
+                "获取上一次填报的信息时出现错误！"
+                + "\n"
+                + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
+            )
+            if user_config.SC_switcher == 1:
+                Pusher.sc_push_when_wrong_info(self)
+            exit()
         # 在 `wx/xg/yz-mobile/rzxx_list.jsp` 中，获取 `szcsmc`，并查 `location.py` 得 `szcsbm`
         header_for_rzxx = {
             'User-Agent':
@@ -109,19 +124,29 @@ class NWPU_Yqtb_Site(object):
             'upgrade-insecure-requests': '1',
             'cache-control': 'no-cache'
         }
-        rzxx_list = self.session.get(url_rzxx_list, headers=header_for_rzxx)
-        rzxx_list_str = rzxx_list.text
-        soup = BeautifulSoup(rzxx_list_str, 'html.parser')
-        loc_name = soup.find("span", attrs={"class": "status"}).string
-        self.szcsmc = loc_name
-        loc_code = location.get_location(loc_name)
-        if loc_name == "在西安":
-            self.szcsbm = "2"
-        elif loc_name == "在学校":
-            self.szcsbm = "1"
-        else:
-            self.szcsbm = loc_code[0]
-        if self.szcsbm == "" and loc_name != "在西安" and loc_name != "在学校":
+        try:
+            rzxx_list = self.session.get(url_rzxx_list, headers=header_for_rzxx)
+            rzxx_list_str = rzxx_list.text
+            soup = BeautifulSoup(rzxx_list_str, 'html.parser')
+            loc_name = soup.find("span", attrs={"class": "status"}).string
+            self.szcsmc = loc_name
+            loc_code = location.get_location(loc_name)
+            if loc_name == "在西安":
+                self.szcsbm = "2"
+            elif loc_name == "在学校":
+                self.szcsbm = "1"
+            else:
+                self.szcsbm = location.get_location(re.findall("""陕西省西安市.*区""", loc_name)[0])
+            if self.szcsbm == "" and loc_name != "在西安" and loc_name != "在学校":
+                print(
+                    "获取上一次填报的信息时出现错误！"
+                    + "\n"
+                    + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
+                )
+                if user_config.SC_switcher == 1:
+                    Pusher.sc_push_when_wrong_info(self)
+                exit()
+        except:
             print(
                 "获取上一次填报的信息时出现错误！"
                 + "\n"
@@ -131,32 +156,38 @@ class NWPU_Yqtb_Site(object):
                 Pusher.sc_push_when_wrong_info(self)
             exit()
         
-        
-        # self.hsjc = self.get_last_hsjc_status(data_for_init, header_for_init)
-            
-                
     
     def submit(self):
         # 伪造一次对 Form 页面的请求，获得 JSESSIONID
-        self.session.get(url_jrsb)
-        header_for_init = {
-            'User-Agent':
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
-            'Host': 'yqtb.nwpu.edu.cn',
-            'cookie': 'JSESSIONID=' + str((self.session.cookies.values()[1])),
-            'accept':
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'upgrade-insecure-requests': '1',
-            'cache-control': 'no-cache'
-        }
-        header_for_submit = {
-            "Host": "yqtb.nwpu.edu.cn",
-            "Referer": "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Cookie": "JSESSIONID=" + str((self.session.cookies.values()[1])),
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.4976.0 Safari/537.36",
-            "Content-Length": "196",
-        }
+        try:
+            self.session.get(url_jrsb)
+            header_for_init = {
+                'User-Agent':
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.26 Safari/537.36',
+                'Host': 'yqtb.nwpu.edu.cn',
+                'cookie': 'JSESSIONID=' + str((self.session.cookies.values()[1])),
+                'accept':
+                    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'upgrade-insecure-requests': '1',
+                'cache-control': 'no-cache'
+            }
+            header_for_submit = {
+                "Host": "yqtb.nwpu.edu.cn",
+                "Referer": "https://yqtb.nwpu.edu.cn/wx/ry/jrsb_xs.jsp",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Cookie": "JSESSIONID=" + str((self.session.cookies.values()[1])),
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.4976.0 Safari/537.36",
+                "Content-Length": "196",
+            }
+        except:
+            print(
+                "获取填报页面时出现错误！"
+                + "\n"
+                + "请联系作者（通过 Github Issue 或邮箱：i@pm-z.tech）并附上信息填报网站「个人中心→我的打卡」页面的截图，便于定位问题！"
+            )
+            if user_config.SC_switcher == 1:
+                Pusher.sc_push_when_get_submit_page_error(self)
+            exit()
         self.data_for_submit = {
             'hsjc': '1',
             'xasymt': '1',

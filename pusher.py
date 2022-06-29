@@ -80,4 +80,20 @@ class Pusher(object):
         }
         requests.post(url_for_sc, data=data_for_wrong_info)
         print('初始化或上传填报信息时出现错误 | 错误提示已通过微信推送。')
+
+    def sc_push_when_get_submit_page_error(site):
+        data_for_get_submit_page_error = {
+            "title":
+                '今日疫情填报失败 | 获取信息填报页面时出现错误',
+            "desp":
+                '''
+❌ 获取信息填报页面时出现错误！
+
+出现该问题的可能原因：
+- 学校对翱翔门户或疫情填报系统后台做出了改动；
+    该种情况，请持续关注 https://github.com/Pinming/NWPU_COVID19_AutoReport ，等待软件更新再试。
+                '''
+        }
+        requests.post(url_for_sc, data=data_for_get_submit_page_error)
+        print('初始化或上传填报信息时出现错误 | 错误提示已通过微信推送。')
         

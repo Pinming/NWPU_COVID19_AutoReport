@@ -1,7 +1,7 @@
 import user_config
 from report import NWPU_Yqtb_Site
 
-__version__ = [2, 1, 2, '220625-1434']
+__version__ = [2, 1, 3, '220630-0202']
 
 
 def handler(event, context):
