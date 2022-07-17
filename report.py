@@ -128,12 +128,14 @@ class NWPU_Yqtb_Site(object):
             soup = BeautifulSoup(rzxx_list_str, 'html.parser')
             loc_name = soup.find("span", attrs={"class": "status"}).string
             self.szcsmc = loc_name
-            loc_code = location.get_location(loc_name)
+            self.szcsbm = location.get_location(loc_name)
+            
+            # 特殊情况：在西安 / 在学校
             if loc_name == "在西安":
                 self.szcsbm = "2"
             elif loc_name == "在学校":
                 self.szcsbm = "1"
-            else:
+            elif loc_name.find("西安") >= 0:
                 self.szcsbm = location.get_location(re.findall("""陕西省西安市.*区""", loc_name)[0])
             if self.szcsbm == "" and loc_name != "在西安" and loc_name != "在学校":
                 print(
